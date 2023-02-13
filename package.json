@@ -4,7 +4,7 @@
   "description": "Primer servidor en Node.ja y express ",
   "main": "app.js ",
   "scripts": {
-    "tart": "nodemon app.mjs"
+    "start": "nodemon app.mjs"
   },
   "author": "Seba Vidal",
   "license": "ISC",
