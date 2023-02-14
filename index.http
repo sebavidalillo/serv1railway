@@ -1,8 +1,0 @@
-POST https://serv1railway.onrender.com/ HTTP/1.1
-Content-Type: application/json 
-
-{
- "id": "no se", 
- "mensaje": "aca pasa de todo"
-}
-
