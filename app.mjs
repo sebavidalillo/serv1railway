@@ -43,7 +43,7 @@ app.post('/', (req,res)=>{
 app.put('/', (req,res)=>{
     let data = req.body;  
     console.log(data);
-    res.send(JSON.stringify(randoms));
+    res.status(200).send(JSON.stringify(randoms));
 }); 
 
 const PUERTO = process.env.PORT || 3000; // en caso de que el servicio entregue puerto 
