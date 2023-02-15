@@ -35,14 +35,14 @@ app.get('/datos/drogas/:nombredroga', (req,res)=>{
 
 app.post('/', (req,res)=>{
     let data = req.body;  
-    console.log(data);
+    console.log(req.body);
     //randoms.drogas.push(data); 
     res.send(JSON.stringify(randoms));
 }); 
 
 app.put('/', (req,res)=>{
     let data = req.body;  
-    console.log(data);
+    console.log(req.body);
     res.status(200).send(JSON.stringify(randoms));
 }); 
 
