@@ -5,6 +5,11 @@ import {randoms} from './datos.mjs';
 
 app.use(express.json()); 
 
+app.use('/', function (req, res, next) {
+    console.log('Request Type:', req.method);
+    next();
+  });
+
 //Routing
 app.get('/', (req,res) => {
     res.send('Primer servido'); 
