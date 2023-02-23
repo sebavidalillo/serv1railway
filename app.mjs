@@ -3,9 +3,7 @@ const app = express(); //retorna aplicacion de express.
 import http from 'http'; 
 import {randoms} from './datos.mjs'; 
 
-import bodyParser from "body-parser";
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); 
 
 //Routing
@@ -36,12 +34,10 @@ app.get('/datos/drogas/:nombredroga', (req,res)=>{
     res.send(JSON.stringify(resultados)); 
 }); 
 
-app.post('/', (req,res)=>{
-    let data = req.body;  
+app.post('/', function (req, res) {
     console.log(req.body);
-    //randoms.drogas.push(data); 
-    res.send(randoms);
-}); 
+    res.send();
+  });
 
 app.put('/', (req,res)=>{
     let data = req.body;  
