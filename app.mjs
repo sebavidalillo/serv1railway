@@ -3,7 +3,7 @@ const app = express(); //retorna aplicacion de express.
 import http from 'http'; 
 import {randoms} from './datos.mjs'; 
 
-const bodyParser = require("body-parser");
+import bodyParser from "body-parser";
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(express.json()); 
