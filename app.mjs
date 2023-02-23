@@ -37,7 +37,7 @@ app.post('/', (req,res)=>{
     let data = req.body;  
     console.log(req.body);
     //randoms.drogas.push(data); 
-    res.send(JSON.stringify(randoms));
+    res.send(randoms);
 }); 
 
 app.put('/', (req,res)=>{
