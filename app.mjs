@@ -45,7 +45,13 @@ app.put('/', (req,res)=>{
     res.status(200).send(JSON.stringify(randoms));
 }); 
 
-const PUERTO = process.env.PORT || 3000; // en caso de que el servicio entregue puerto 
-app.listen(PUERTO, ()=> {
-    console.log(`servidor rescuchando en ${PUERTO}...`)
-}); 
+import net from 'net';
+
+const server = net.createServer(function(socket) {
+    socket.write('hello\n');
+    socket.write('world\n');
+    socket.on('data', function(data) {
+       socket.write('You said: ' + data);
+    }
+    )
+});
