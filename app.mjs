@@ -35,13 +35,6 @@ app.get('/datos', (req,res) => {
     res.send(randoms); 
 });
 
-
-app.get('/datos/drogas/:nombredroga', (req,res)=>{
-    const nombredroga = req.params.nombredroga; 
-    const resultados = randoms.drogas.filter(droga => droga.nombre == nombredroga);
-    res.send(JSON.stringify(resultados)); 
-}); 
-
 app.post('/', function (req, res) {
     //console.log(req.body);
     let message = req.body; 
