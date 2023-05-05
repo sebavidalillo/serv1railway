@@ -2,31 +2,39 @@ import express from 'express';
 const app = express(); //retorna aplicacion de express. 
 import http from 'http'; 
 import {randoms} from './datos.mjs'; 
+import mysql from 'mysql'; 
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); 
 
+//port = process.env.PORT || 3000; 
+const port = 3000;
+var database,
+dataTypes = [],
+clients=[],
+dateTimeFormat = 'YYYY-MM-DD HH:mm:ss ZZ',
+timeZone = '-04:00'; 
+//ip = 'my_host'; 
+
+database = mysql.createPool({
+      connectionLimit:10,
+      host:'localhost',
+      user:'root',
+      password:'123456789',
+      database:'somax_clon1', //
+      debug:false
+});
+
+
 //Routing
 app.get('/', (req,res) => {
-    res.send('Primer servido'); 
+    res.send('Servidor 1'); 
 });
 
 app.get('/datos', (req,res) => {
     res.send(randoms); 
 });
 
-app.get('/datos/personas', (req,res) => {
-    res.send(randoms.Personas); 
-});
-
-app.get('/datos/personas/:nombre', (req,res) => {
-    const nombre = req.params.nombre;
-    const resultados = randoms.Personas.filter(persona => persona.nombre == nombre);
-    if (resultados.length ===0) {
-        return res.status(404).send(`no hay ${nombre}`); 
-    }
-    res.send(JSON.stringify(resultados));  
-}); 
 
 app.get('/datos/drogas/:nombredroga', (req,res)=>{
     const nombredroga = req.params.nombredroga; 
@@ -35,8 +43,18 @@ app.get('/datos/drogas/:nombredroga', (req,res)=>{
 }); 
 
 app.post('/', function (req, res) {
-    console.log(req.body);
-    res.send();
+    //console.log(req.body);
+    let message = req.body; 
+    let rpm = message['can.engine.rpm']; 
+    database.query('insert into messages (id_data, data) value (?,?);',[42,rpm],(error)=>{
+        if(error){
+            throw error;
+        }
+        else{
+            console.log('Inserted in DataBase');
+        }
+      });
+    res.send(200);
   });
 
 app.put('/', (req,res)=>{
@@ -49,4 +67,3 @@ const PUERTO = process.env.PORT || 3000; // en caso de que el servicio entregue 
 app.listen(PUERTO, ()=> {
     console.log(`servidor rescuchando en ${PUERTO}...`)
 }); 
-
