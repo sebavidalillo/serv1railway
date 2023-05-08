@@ -68,3 +68,25 @@
     "timestamp": 1678374437,
     "timestamp.key": 1678374437.11406
 }
+
+
+
+{
+    "channel.id":1158175,
+    "ident":"863457051459871",
+    "message.buffered.status":false,
+    "peer":"79.170.212.50:54077",
+    "position.altitude":45.5,
+    "position.hdop":3,
+    "position.latitude":-33.045027,
+    "position.longitude":-71.602087,
+    "position.timestamp":1683211576,
+    "protocol.id":33,
+    "protocol.version":"15.01",
+    "record.seqnum":18957,
+    "report.code":"GTRTL",
+    "report.reason":0,
+    "server.timestamp":1683212483.186492,
+    "timestamp":1683211576,
+    "timestamp.key":1683211576.18957
+}
