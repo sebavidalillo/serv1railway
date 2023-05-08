@@ -13,7 +13,7 @@ const port = 3000;
 var database,
 dataTypes = [],
 clients=[],
-dateTimeFormat = 'YYYY-MM-DD HH:mm:ss ZZ',
+dateTimeFormat = 'YYYY-MM-DD HH:mm:ss',
 timeZone = '-04:00'; 
 //ip = 'my_host'; 
 
@@ -46,15 +46,9 @@ app.get('/datos', (req,res) => {
 app.post('/', function (req, res) {
     //console.log(req.body);
     const message = req.body; 
-    console.log(getDateTime()); 
-    // database.query('insert into messages (id_data, data) value (?,?);',data,(error)=>{
-    //     if(error){
-    //         throw error;
-    //     }
-    //     else{
-    //         console.log('Inserted in DataBase');
-    //     }
-    //   });
+    saveData(message); 
+    //console.log(getDateTime()); 
+    // new Date().getTime() //MILLIS
     res.sendStatus(200);
   });
 
@@ -80,10 +74,40 @@ function getDateTime(){
   }
 
 function saveData(message){
-    const rpm = message['can.engine.rpm']; 
-    const imei = message['ident']; 
-    const odometer = message['can.vehicle.mileage']; 
-    const fuel = message['can.fuel.volume']; 
-    const mentira = message['mentira']; //si no está definido se queda como undefined
-    //const data = [id_devices_data_types, value, time, ip, port, size, dateEntry];
-}
+  var time = message['timestamp'];
+  var gps = null; 
+  var gps_flag = 0; 
+  //console.log(message['position.latitude']); 
+  if (message['position.latitude']!== undefined){
+    gps_flag = 1; 
+    gps = `POINT(${message['position.latitude']}, ${message['position.longitude']})`; 
+    console.log(gps); 
+  }
+  for (let llave in message){
+    var id_devices_data_types = 1; 
+    var value = 0; 
+    var date = null; 
+        if (llave == 'can.engine.rpm'){
+      id_devices_data_types = 92; 
+      value = message[llave]; 
+    } else if (llave == 'can.fuel.volume'){
+      id_devices_data_types = 82; 
+      value = message[llave]; 
+    } else if (llave == 'can.vehicle.mileage'){
+      id_devices_data_types = 83; 
+      value = message[llave];
+    } 
+    //console.log(id_devices_data_types, value); 
+   
+    // database.query('insert into md_fleet_devices_data   id_devices_data_types, value, time, ip, port, size, dateEntry)  values ?,?,?,?,?,?,?);',dataToSave,(error)=>{
+    //     if(error){
+    //         throw error;
+    //     }
+    //     else{
+    //         console.log('Inserted in DataBase');
+    //     }
+    //   });
+    // date entry?? = moment(new Date(message[llave]*1000)).format (dateTimeFormat);
+  }
+  //console.log(time);
+};
