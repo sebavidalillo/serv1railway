@@ -27,10 +27,10 @@ function getTimeZone(){
 
 database = mysql.createPool({
       connectionLimit:10,
-      host:'localhost',
-      user:'root',
+      host:'demo-gv3000-1.cnmsiceec0ea.us-east-2.rds.amazonaws.com',
+      user:'admin',
       password:'123456789',
-      database:'somax_clon1', //
+      database:'demoInitial', //
       debug:false
 });
 
