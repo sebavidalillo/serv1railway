@@ -16,7 +16,6 @@ dataTypes = [],
 clients=[],
 dateTimeFormat = 'YYYY-MM-DD HH:mm:ss',
 timeZone = '-04:00'; 
-//ip = 'my_host'; 
 
 function getTimeZone(){
     exec("date +%:z", (error, stdout, stderr) => {
@@ -53,12 +52,6 @@ app.post('/', function (req, res) {
     res.sendStatus(200);
   });
 
-app.put('/', (req,res)=>{
-    let data = req.body;  
-    console.log(req.body);
-    res.status(200).send(JSON.stringify(randoms));
-}); 
-
 const PUERTO = process.env.PORT || 3000; // en caso de que el servicio entregue puerto 
 app.listen(PUERTO, ()=> {
     console.log(`servidor rescuchando en ${PUERTO}...`)
@@ -71,7 +64,7 @@ function getDateTime(){
     } catch (error) {
         console.log('error: '+error+'')
     }
-  }
+  };
 
 function saveData(message){
   var size = 30, //cualquier numero para probar el guardado en base de datos
@@ -139,11 +132,6 @@ function saveData(message){
       }
     };
   };
-
-  
- 
-
-  //console.log(time);
 };
 
 function transformIp(ip,format){
