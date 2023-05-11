@@ -68,8 +68,9 @@ function getDateTime(){
 
 function saveData(message){
   var size = 30, //cualquier numero para probar el guardado en base de datos
-  time = message['timestamp'], 
-  value = null, 
+  time     = message['timestamp'], 
+  value    = null, 
+  valuesBuff = "",
   id_devices_data_types = 1, 
   dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat),
   [ip, port] = message['peer'].split(':'),
@@ -83,22 +84,8 @@ function saveData(message){
     id_devices_data_types = 42; 
     value = 0; 
     gps_flag = 1; 
-    //gps = `POINT(${message['position.latitude']} ${message['position.longitude']})`; 
     gps = [message['position.latitude'], message['position.longitude']]; 
-    try{
-      database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry) values (?,?,?,POINT(?, ?),?,?,?,?);',[id_devices_data_types, value, time, gps[0], gps[1], ip, port, size, dateEntry],(error)=>{
-        if(error){
-            throw error;
-        }
-        else{
-            console.log('Inserted GPS in DataBase');
-        }
-      });  
-    }
-    catch (error) {
-      console.log('error', error)
-    }
-  }
+  };
 
   for (let llave in message){
 
@@ -117,21 +104,41 @@ function saveData(message){
     };
 
     if (id_devices_data_types !== 1 && value !== null && time !== null && ip !== null && port !== null && size !== null && dateEntry !== null){
-      try {
-        database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, ip, port, size, dateEntry)  values (?,?,?,?,?,?,?);',[id_devices_data_types, value, time, ip, port, size, dateEntry],(error)=>{
-             if(error){
-                 throw error;
-             }
-             else{
-                 console.log('Inserted in DataBase');
-             }
-           });
-      }
-      catch (error) {
-        console.log('error:', error)
-      }
+      valuesBuff += '('+id_devices_data_types+','+value+','+time+','+ip+','+port+','+size+','+dateEntry+')'; 
+      console.log('entro al if')
     };
   };
+
+  console.log(valuesBuff);
+  // HACER UNA QUERY COMO ACUMULADA?? 
+
+  //try {
+  //  database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, ip, port, size, dateEntry)  values (?,?,?,?,?,?,?);',[id_devices_data_types, value, time, ip, port, size, dateEntry],(error)=>{
+  //       if(error){
+  //           throw error;
+  //       }
+  //       else{
+  //           console.log('Inserted in DataBase');
+  //       }
+  //     });
+  //}
+  //catch (error) {
+  //  console.log('error:', error)
+  //}
+
+
+
+  // database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry) values (?,?,?,POINT(?, ?),?,?,?,?);',[id_devices_data_types, value, time, gps[0], gps[1], ip, port, size, dateEntry],(error)=>{
+  //   if(error){
+  //       throw error;
+  //   }
+  //   else{
+  //       console.log('Inserted GPS in DataBase');
+  //   }
+  // });  
+
+
+
 };
 
 function transformIp(ip,format){
