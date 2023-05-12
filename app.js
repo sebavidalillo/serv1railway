@@ -10,8 +10,10 @@ import { time } from 'console';
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); 
 
+const PUERTO = process.env.PORT || 3000; // en caso de que el servicio 
 const port = 3000;
 var database,
+devices = [],
 dataTypes = [],
 clients=[],
 dateTimeFormat = 'YYYY-MM-DD HH:mm:ss',
@@ -22,16 +24,20 @@ function getTimeZone(){
       if(error || stderr){ return ''; }
       // timeZone = stdout.replace('\n','');
     });
-  }
+}
 
-database = mysql.createPool({
+function connectionDataBase() {
+  database = mysql.createPool({
       connectionLimit:10,
-      host:'demo-gv3000-1.cnmsiceec0ea.us-east-2.rds.amazonaws.com',
-      user:'admin',
+      host:'localhost',
+      user:'root',
       password:'123456789',
-      database:'demoInitial', //
+      database:'somax_clon1', //
       debug:false
-});
+  }); 
+  getDevices();
+  console.log(devices); 
+};
 
 
 //Routing
@@ -46,16 +52,28 @@ app.get('/datos', (req,res) => {
 app.post('/', function (req, res) {
     //console.log(req.body);
     const message = req.body; 
+    // checkIdDevice(message["ident"]); crear esta funcion
     saveData(message); 
     //console.log(getDateTime()); 
     // new Date().getTime() //MILLIS
     res.sendStatus(200);
   });
 
-const PUERTO = process.env.PORT || 3000; // en caso de que el servicio entregue puerto 
-app.listen(PUERTO, ()=> {
-    console.log(`servidor rescuchando en ${PUERTO}...`)
-}); 
+
+  function initServer(){
+    try {
+        console.log('initServer')
+            //cleanInterval();
+            connectionDataBase();
+            app.listen(PUERTO, ()=> {
+              console.log(`servidor rescuchando en ${PUERTO}...`); 
+          });
+    } catch (error) {
+        console.log('error: '+error+'')
+    }
+}
+
+ 
 
 function getDateTime(){
     try {
@@ -136,10 +154,25 @@ function saveData(message){
   //       console.log('Inserted GPS in DataBase');
   //   }
   // });  
-
-
-
 };
+
+
+function saveDevice(imei){
+  try {
+      console.log('saveDevice')
+      var consult = 'insert into demoBatchile.md_fleet_devices(imei, dateEntry) values ('+imei+', "'+getDateTime()+'")'
+      database.query(consult, function(error,rows,fields){
+          if(error){
+              console.log(error);
+          }else{
+              console.log('save new device ok');
+              getDevices();
+          }
+      })
+  } catch (error) {
+      console.log('error: '+error+'')
+  }
+}
 
 function transformIp(ip,format){
   try {
@@ -154,3 +187,22 @@ function transformIp(ip,format){
       console.log('error: '+error+'')
   }
 }
+
+function getDevices(){
+  try {
+      console.log("Finding all Devices")
+      var consult = 'select id_devices, imei from md_fleet_devices',
+      query = mysql.format(consult)
+      database.query(query, function(error,rows,fields){
+          if(error){
+              console.log(error);
+          }else{
+              devices = rows;
+          }
+      })
+  } catch (error) {
+      console.log('error: '+error+'')
+  } 
+}
+
+initServer();
