@@ -12,10 +12,10 @@ app.use(express.json());
 
 const PUERTO = process.env.PORT || 3000; // en caso de que el servicio 
 const port = 3000;
-var database,
-devices = [],
-dataTypes = [],
-clients=[],
+var database;
+var devices = [],
+//dataTypes = [],
+//clients=[],
 dateTimeFormat = 'YYYY-MM-DD HH:mm:ss',
 timeZone = '-04:00'; 
 
@@ -24,7 +24,7 @@ function getTimeZone(){
       if(error || stderr){ return ''; }
       // timeZone = stdout.replace('\n','');
     });
-}
+};
 
 function connectionDataBase() {
   database = mysql.createPool({
@@ -32,11 +32,10 @@ function connectionDataBase() {
       host:'localhost',
       user:'root',
       password:'123456789',
-      database:'somax_clon1', //
+      database:'somax_clon1', 
       debug:false
   }); 
-  getDevices();
-  console.log(devices); 
+  getDevices(); 
 };
 
 
@@ -49,31 +48,14 @@ app.get('/datos', (req,res) => {
     res.send(randoms); 
 });
 
-app.post('/', function (req, res) {
+app.post('/', function (req, res) { 
     //console.log(req.body);
-    const message = req.body; 
-    // checkIdDevice(message["ident"]); crear esta funcion
-    saveData(message); 
+    //const message = req.body; 
+    saveData(getValuesBuff(req.body));
     //console.log(getDateTime()); 
     // new Date().getTime() //MILLIS
     res.sendStatus(200);
   });
-
-
-  function initServer(){
-    try {
-        console.log('initServer')
-            //cleanInterval();
-            connectionDataBase();
-            app.listen(PUERTO, ()=> {
-              console.log(`servidor rescuchando en ${PUERTO}...`); 
-          });
-    } catch (error) {
-        console.log('error: '+error+'')
-    }
-}
-
- 
 
 function getDateTime(){
     try {
@@ -84,69 +66,48 @@ function getDateTime(){
     }
   };
 
-function saveData(message){
+function getValuesBuff(message){
   var size = 30, //cualquier numero para probar el guardado en base de datos
   time     = message['timestamp'], 
-  value    = null, 
-  valuesBuff = "",
+  value    = null,
   id_devices_data_types = 1, 
   dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat),
   [ip, port] = message['peer'].split(':'),
   gps = null,
-  gps_flag = 0; //indicar que si hay o no informacion del gps en el reporte
-
+  gps_flag = 0, //indicar que si hay o no informacion del gps en el reporte
+  valuesBuff="";
   ip = transformIp(ip,1); 
   port = parseInt(port); 
-
-  if (message['position.latitude']!== undefined){
-    id_devices_data_types = 42; 
-    value = 0; 
-    gps_flag = 1; 
-    gps = [message['position.latitude'], message['position.longitude']]; 
-  };
 
   for (let llave in message){
 
     id_devices_data_types = 1,
     value = 0; 
 
-    if (llave == 'can.engine.rpm'){
-      id_devices_data_types = 92; 
-      value = message[llave]; 
-    } else if (llave == 'can.fuel.volume'){
+    if (llave == 'can.fuel.volume'){
       id_devices_data_types = 82; 
       value = message[llave]; 
     } else if (llave == 'can.vehicle.mileage'){
       id_devices_data_types = 83; 
       value = message[llave];
+    } else if (llave== 'position.latitude'){
+      id_devices_data_types = 42; 
+      gps = [message['position.latitude'], message['position.longitude']];
+      gps_flag=1; 
     };
-
+    
     if (id_devices_data_types !== 1 && value !== null && time !== null && ip !== null && port !== null && size !== null && dateEntry !== null){
-      valuesBuff += '('+id_devices_data_types+','+value+','+time+','+ip+','+port+','+size+','+dateEntry+')'; 
-      console.log('entro al if')
+      if(valuesBuff !== ""){ valuesBuff += ","; }
+      if(gps_flag == 1){
+        valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('+gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
+      } else if (gps_flag==0){
+        valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT(null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+      };
+         
     };
   };
-
-  console.log(valuesBuff);
-  // HACER UNA QUERY COMO ACUMULADA?? 
-
-  //try {
-  //  database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, ip, port, size, dateEntry)  values (?,?,?,?,?,?,?);',[id_devices_data_types, value, time, ip, port, size, dateEntry],(error)=>{
-  //       if(error){
-  //           throw error;
-  //       }
-  //       else{
-  //           console.log('Inserted in DataBase');
-  //       }
-  //     });
-  //}
-  //catch (error) {
-  //  console.log('error:', error)
-  //}
-
-
-
-  // database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry) values (?,?,?,POINT(?, ?),?,?,?,?);',[id_devices_data_types, value, time, gps[0], gps[1], ip, port, size, dateEntry],(error)=>{
+  return valuesBuff; 
+  // database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry) values ;',[id_devices_data_types, value, time, gps[0], gps[1], ip, port, size, dateEntry],(error)=>{
   //   if(error){
   //       throw error;
   //   }
@@ -156,6 +117,22 @@ function saveData(message){
   // });  
 };
 
+//Hace una query a la BD de valuesBuff y limpia el valuesBuff. 
+function saveData(valuesBuff){ 
+  try {
+    database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)  values '+valuesBuff+'',(error)=>{
+         if(error){
+             throw error;
+         }
+         else{
+             console.log('Inserted in DataBase');
+         }
+       }); 
+  }
+  catch (error) {
+    console.log('error:', error)
+  }; 
+}
 
 function saveDevice(imei){
   try {
@@ -191,18 +168,32 @@ function transformIp(ip,format){
 function getDevices(){
   try {
       console.log("Finding all Devices")
-      var consult = 'select id_devices, imei from md_fleet_devices',
-      query = mysql.format(consult)
-      database.query(query, function(error,rows,fields){
+      //var consult = 'select id_devices, imei from somax_clon1.md_fleet_devices';
+      //query = mysql.format(consult)
+      database.query('select id_devices, imei from somax_clon1.md_fleet_devices', function(error,rows,fields){
           if(error){
               console.log(error);
           }else{
+              //console.log(rows); 
               devices = rows;
           }
       })
   } catch (error) {
       console.log('error: '+error+'')
-  } 
-}
+  }
+};
+
+function initServer(){
+  try {
+      console.log('initServer')
+          //cleanInterval();
+          connectionDataBase();
+          app.listen(PUERTO, ()=> {
+            console.log(`servidor rescuchando en ${PUERTO}...`); 
+        });
+  } catch (error) {
+      console.log('error: '+error+'')
+  }
+};
 
 initServer();
