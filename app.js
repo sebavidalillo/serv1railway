@@ -14,10 +14,12 @@ const PUERTO = process.env.PORT || 3000; // en caso de que el servicio
 const port = 3000;
 var database;
 var devices = [],
+reqBodyBuff =[], 
 //dataTypes = [],
 //clients=[],
 dateTimeFormat = 'YYYY-MM-DD HH:mm:ss',
 timeZone = '-04:00'; 
+var server; 
 
 function getTimeZone(){
     exec("date +%:z", (error, stdout, stderr) => {
@@ -51,7 +53,8 @@ app.get('/datos', (req,res) => {
 app.post('/', function (req, res) { 
     //console.log(req.body);
     //const message = req.body; 
-    saveData(getValuesBuff(req.body));
+    //saveData(getValuesBuff(req.body)); //esto debería hacerse cada cierto rato.
+    reqBodyBuff.push(req.body); 
     //console.log(getDateTime()); 
     // new Date().getTime() //MILLIS
     res.sendStatus(200);
@@ -68,71 +71,70 @@ function getDateTime(){
 
 function getValuesBuff(message){
   var size = 30, //cualquier numero para probar el guardado en base de datos
-  time     = message['timestamp'], 
-  value    = null,
-  id_devices_data_types = 1, 
-  dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat),
-  [ip, port] = message['peer'].split(':'),
-  gps = null,
-  gps_flag = 0, //indicar que si hay o no informacion del gps en el reporte
-  valuesBuff="";
-  ip = transformIp(ip,1); 
-  port = parseInt(port); 
+  value = null,
+  id_devices_data_types = 1,
+  ip,
+  port; 
+  if (message.length !== 0){
+    var time = message['timestamp'], 
+    dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat),
+    [ip, port] = message['peer'].split(':'),
+    gps = null,
+    gps_flag = 0, //indicar que si hay o no informacion del gps en el reporte
+    ip = transformIp(ip,1),
+    port = parseInt(port),
+    valuesBuff=""; 
 
-  for (let llave in message){
+    for (let llave in message){
 
-    id_devices_data_types = 1,
-    value = 0; 
+      id_devices_data_types = 1,
+      value = 0; 
 
-    if (llave == 'can.fuel.volume'){
-      id_devices_data_types = 82; 
-      value = message[llave]; 
-    } else if (llave == 'can.vehicle.mileage'){
-      id_devices_data_types = 83; 
-      value = message[llave];
-    } else if (llave== 'position.latitude'){
-      id_devices_data_types = 42; 
-      gps = [message['position.latitude'], message['position.longitude']];
-      gps_flag=1; 
-    };
-    
-    if (id_devices_data_types !== 1 && value !== null && time !== null && ip !== null && port !== null && size !== null && dateEntry !== null){
-      if(valuesBuff !== ""){ valuesBuff += ","; }
-      if(gps_flag == 1){
-        valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('+gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
-      } else if (gps_flag==0){
-        valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT(null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+      if (llave == 'can.fuel.volume'){
+        id_devices_data_types = 82; 
+        value = message[llave]; 
+      } else if (llave == 'can.vehicle.mileage'){
+        id_devices_data_types = 83; 
+        value = message[llave];
+      } else if (llave== 'position.latitude'){
+        id_devices_data_types = 42; 
+        gps = [message['position.latitude'], message['position.longitude']];
+        gps_flag=1; 
       };
-         
+
+      if (id_devices_data_types !== 1 && value !== null && time !== null && ip  !== null && port !== null && size !== null && dateEntry !== null){
+        if(valuesBuff !== ""){ valuesBuff += ","; }
+        if(gps_flag == 1){
+          valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
+        } else if (gps_flag==0){
+          valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+        };
+
+      };
     };
-  };
-  return valuesBuff; 
-  // database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry) values ;',[id_devices_data_types, value, time, gps[0], gps[1], ip, port, size, dateEntry],(error)=>{
-  //   if(error){
-  //       throw error;
-  //   }
-  //   else{
-  //       console.log('Inserted GPS in DataBase');
-  //   }
-  // });  
+  }
+  return valuesBuff;   
 };
 
-//Hace una query a la BD de valuesBuff y limpia el valuesBuff. 
-function saveData(valuesBuff){ 
-  try {
-    database.query('insert into md_fleet_devices_data (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)  values '+valuesBuff+'',(error)=>{
-         if(error){
-             throw error;
-         }
-         else{
-             console.log('Inserted in DataBase');
-         }
-       }); 
-  }
-  catch (error) {
-    console.log('error:', error)
-  }; 
-}
+//Hace una query a la BD de valuesBuff
+function saveData(valuesBuff){
+  if(valuesBuff !== undefined){
+    try {
+      database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)    values '+valuesBuff+'',(error)=>{
+           if(error){
+               throw error;
+           }
+           else{
+               console.log('Inserted in DataBase');
+           }
+         }); 
+    }
+    catch (error) {
+      console.log('error:', error)
+  }} else {
+    console.log('valuesBuff undefined');
+  } 
+};
 
 function saveDevice(imei){
   try {
@@ -188,7 +190,7 @@ function initServer(){
       console.log('initServer')
           //cleanInterval();
           connectionDataBase();
-          app.listen(PUERTO, ()=> {
+          server = app.listen(PUERTO, ()=> {
             console.log(`servidor rescuchando en ${PUERTO}...`); 
         });
   } catch (error) {
@@ -197,3 +199,14 @@ function initServer(){
 };
 
 initServer();
+
+server.on('listening', ()=>{
+  console.log('evento listening activado');
+  setInterval(()=>{
+    //savedata? 
+    console.log(reqBodyBuff);
+    console.log(getValuesBuff(reqBodyBuff));
+    saveData(getValuesBuff(reqBodyBuff));
+    console.log('pasaron 10 segundos')
+  },1000); 
+});
