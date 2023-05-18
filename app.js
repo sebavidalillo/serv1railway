@@ -31,10 +31,10 @@ function getTimeZone(){
 function connectionDataBase() {
 	database = mysql.createPool({
 		connectionLimit:10,
-		host:'localhost',
-		user:'root',
+		host:'demo-gv3000-1.cnmsiceec0ea.us-east-2.rds.amazonaws.com',
+		user:'admin',
 		password:'123456789',
-		database:'somax_clon1', 
+		database:'demoInitial', 
 		debug:false
 	}); 
 	getDevices(); 
@@ -55,7 +55,7 @@ app.post('/', function (req, res) {
 	//const message = req.body; 
 	//saveData(getValuesBuff(req.body)); //esto debería hacerse cada cierto rato.
 	reqBodyBuff.push(req.body); 
-	//console.log(getDateTime()); 
+	console.log(req.body); 
 	// new Date().getTime() //MILLIS
 	res.sendStatus(200);
 });
@@ -197,7 +197,7 @@ function getDevices(){
 		console.log("Finding all Devices")
 		//var consult = 'select id_devices, imei from somax_clon1.md_fleet_devices';
 		//query = mysql.format(consult)
-		database.query('select id_devices, imei from somax_clon1.md_fleet_devices', function(error,rows,fields){
+		database.query('select id_devices, imei from md_fleet_devices', function(error,rows,fields){
 			if(error){
 				console.log(error);
 			}else{
@@ -236,5 +236,5 @@ server.on('listening', ()=>{
 		//saveData(valuesBuff);
 		//console.log(valuesBuff);
 		console.log('pasaron 10 segundos')
-	},15000); 
+	},15000);
 });
