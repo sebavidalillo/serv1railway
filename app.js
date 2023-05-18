@@ -71,54 +71,57 @@ function getDateTime(){
 
 //Función que arma un string con los datos que se guardarán en paréntesis. De entrada tiene el req.body del POST. No tiene salida, va llenando una variable global que luego se reinicia en Save Data. 
 function getValuesBuff(){
+	for(let i=0; i<reqBodyBuff.length; i++){
+		var message = reqBodyBuff[i];  //se debe hacer un for y que message tome cada valor de reqBoduBuff.req
+		var size = 30, //cualquier numero para probar el guardado en base de datos
+		value = null,
+		id_devices_data_types = 1;
+		var valuesBuff="";
 
-	var message = reqBodyBuff[0];  //se debe hacer un for y que message
-	var size = 30, //cualquier numero para probar el guardado en base de datos
-	value = null,
-	id_devices_data_types = 1;
-	var valuesBuff="";
+		if (message !== undefined){
 
-	if (message !== undefined){
+			var time = message['timestamp'], 
+			dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat);
+			
+			var [ip, port] = message['peer'].split(':'),
+			gps = null,
+			gps_flag = 0; //indicar que si hay o no informacion del gps en el reporte
+			
+			ip = transformIp(ip,1);
+			port = parseInt(port);
 
-		var time = message['timestamp'], 
-		dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat);
-		
-		var [ip, port] = message['peer'].split(':'),
-		gps = null,
-		gps_flag = 0; //indicar que si hay o no informacion del gps en el reporte
-		
-		ip = transformIp(ip,1);
-		port = parseInt(port);
+			for (let llave in message){
 
-		for (let llave in message){
+				id_devices_data_types = 1,
+				value = 0; 
 
-			id_devices_data_types = 1,
-			value = 0; 
-
-			if (llave == 'can.fuel.volume'){
-				id_devices_data_types = 82; 
-				value = message[llave]; 
-			} else if (llave == 'can.vehicle.mileage'){
-				id_devices_data_types = 83; 
-				value = message[llave];
-			} else if (llave== 'position.latitude'){
-				id_devices_data_types = 42; 
-				gps = [message['position.latitude'], message['position.longitude']];
-				gps_flag=1; 
-			};
-
-			if (id_devices_data_types !== 1 && value !== null && time !== null && ip  !== null && port !== null && size !== null && dateEntry !== null){
-				if(valuesBuff !== ""){ valuesBuff += ","; }
-				if(gps_flag == 1){
-				valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
-				} else if (gps_flag==0){
-				valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+				if (llave == 'can.fuel.volume'){
+					id_devices_data_types = 82; 
+					value = message[llave]; 
+				} else if (llave == 'can.vehicle.mileage'){
+					id_devices_data_types = 83; 
+					value = message[llave];
+				} else if (llave== 'position.latitude'){
+					id_devices_data_types = 42; 
+					gps = [message['position.latitude'], message['position.longitude']];
+					gps_flag=1; 
 				};
 
+				if (id_devices_data_types !== 1 && value !== null && time !== null && ip  !== null && port !== null && size !== null && dateEntry !== null){
+					if(valuesBuff !== ""){ valuesBuff += ","; }
+					if(gps_flag == 1){
+					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
+					} else if (gps_flag==0){
+					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+					};
+
+				};
+				if(valuesBuff !== "" && valuesBuff !== undefined){reqBodyBuff.splice(i, 1); }
 			};
-		};
+		}
 	}
-	if(valuesBuff !== ""){
+	//se recorrió todo el reqBuffer y se guardó el valuesBuff, ahora toca guardarlo. 
+	if(valuesBuff !== "" && valuesBuff !== undefined){
 		try {
 		database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)    values '+valuesBuff+'',(error)=>{
 			if(error){
@@ -128,15 +131,12 @@ function getValuesBuff(){
 				console.log('Inserted in DataBase');
 			}
 			});    
-		reqBodyBuff.splice(0, 1); 
 		}
 		catch (error) {
 		console.log('error:', error)
 	}} else {
 		console.log('valuesBuff undefined');
-	}
-	 
-	//return valuesBuff;   
+	}; 
 };
 
 	//Hace una query a la BD de valuesBuff. Luego reinicia la variable global valuesBuff para que no se guarde de nuevo si es que no llegan nuevos POST. 
@@ -229,11 +229,12 @@ server.on('listening', ()=>{
 	console.log('evento listening activado');
 	setInterval(()=>{
 		//savedata? 
-		//console.log(reqBodyBuff);
+		console.log('----------------------------------------------------');
+		console.log('reqBodyBuff antes getValuesBuff =', reqBodyBuff);
 		getValuesBuff(); //llena el valuesBuff con el primer mensaje no más.  
-		console.log(reqBodyBuff);
+		console.log('reqBodyBuff después getValuesBuff =', reqBodyBuff);
 		//saveData(valuesBuff);
 		//console.log(valuesBuff);
 		console.log('pasaron 10 segundos')
-	},5000); 
+	},15000); 
 });
