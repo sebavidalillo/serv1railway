@@ -69,14 +69,27 @@ function getDateTime(){
 	}
 };
 
-//Función que arma un string con los datos que se guardarán en paréntesis. De entrada tiene el req.body del POST. No tiene salida, va llenando una variable global que luego se reinicia en Save Data. 
+//Función que recorre el reqBodyBuff y por cada elemento del arreglo (que es un objeto con toda la info enviada por post) rellena un buffer que luego se guarda en la base de datos. Después de usar cada elemento del arreglo saca el elemento del reqBodyBuff. 
 function getValuesBuff(){
 	for(let i=0; i<reqBodyBuff.length; i++){
-		var message = reqBodyBuff[i];  //se debe hacer un for y que message tome cada valor de reqBoduBuff.req
-		var size = 30, //cualquier numero para probar el guardado en base de datos
+		var message = reqBodyBuff[i],
+		imei = message['ident'], 
+		size = 30, //cualquier numero para probar el guardado en base de datos por mientras 
 		value = null,
-		id_devices_data_types = 1;
-		var valuesBuff="";
+		id_devices_data_types = 1,
+		valuesBuff="";
+
+		if(devices.length !== 0){
+			for (let a=0; a < devices.length; a ++){
+				if(devices[a].imei == imei){
+					console.log('dispositivo ya guardado')
+				} else {
+					saveDevice(imei);
+				}
+			}
+		} else {
+			saveDevice(imei);
+		}
 
 		if (message !== undefined){
 
@@ -98,29 +111,35 @@ function getValuesBuff(){
 				if (llave == 'can.fuel.volume'){
 					id_devices_data_types = 82; 
 					value = message[llave]; 
+
 				} else if (llave == 'can.vehicle.mileage'){
 					id_devices_data_types = 83; 
 					value = message[llave];
+
 				} else if (llave== 'position.latitude'){
 					id_devices_data_types = 42; 
 					gps = [message['position.latitude'], message['position.longitude']];
 					gps_flag=1; 
+
 				};
 
 				if (id_devices_data_types !== 1 && value !== null && time !== null && ip  !== null && port !== null && size !== null && dateEntry !== null){
+
 					if(valuesBuff !== ""){ valuesBuff += ","; }
+
 					if(gps_flag == 1){
-					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")'; 
+					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")';
+
 					} else if (gps_flag==0){
 					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
 					};
 
 				};
-				if(valuesBuff !== "" && valuesBuff !== undefined){reqBodyBuff.splice(i, 1); }
+				if(valuesBuff !== "" && valuesBuff !== undefined){reqBodyBuff.splice(i, 1);} //saca del reqBodyBuff el elemento que se añadió al valuesbuff
 			};
 		}
 	}
-	//se recorrió todo el reqBuffer y se guardó el valuesBuff, ahora toca guardarlo. 
+	//se recorrió todo el reqBuffer y se guardó el valuesBuff, ahora toca guardarlo en base de datos. 
 	if(valuesBuff !== "" && valuesBuff !== undefined){
 		try {
 		database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)    values '+valuesBuff+'',(error)=>{
@@ -139,32 +158,10 @@ function getValuesBuff(){
 	}; 
 };
 
-	//Hace una query a la BD de valuesBuff. Luego reinicia la variable global valuesBuff para que no se guarde de nuevo si es que no llegan nuevos POST. 
-	// function saveData(valuesBuffer){
-	//   if(valuesBuffer !== ""){
-	//     try {
-	//       database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)    values '+valuesBuffer+'',(error)=>{
-	//            if(error){
-	//                throw error;
-	//            }
-	//            else{
-	//                console.log('Inserted in DataBase');
-	//                valuesBuff=""
-	//            }
-	//          }); 
-	//     ;   
-	//     }
-	//     catch (error) {
-	//       console.log('error:', error)
-	//   }} else {
-	//     console.log('valuesBuff undefined');
-	//   }
-	// };
-
 function saveDevice(imei){
 	try {
 		console.log('saveDevice')
-		var consult = 'insert into demoBatchile.md_fleet_devices(imei, dateEntry) values ('+imei+', "'+getDateTime()+'")'
+		var consult = 'insert into md_fleet_devices(imei, dateEntry) values ('+imei+', "'+getDateTime()+'")'
 		database.query(consult, function(error,rows,fields){
 			if(error){
 				console.log(error);
@@ -232,9 +229,11 @@ server.on('listening', ()=>{
 		console.log('----------------------------------------------------');
 		console.log('reqBodyBuff antes getValuesBuff =', reqBodyBuff);
 		getValuesBuff(); //llena el valuesBuff con el primer mensaje no más.  
+		getDevices(); 
 		console.log('reqBodyBuff después getValuesBuff =', reqBodyBuff);
+		console.log(devices);
 		//saveData(valuesBuff);
 		//console.log(valuesBuff);
 		console.log('pasaron 10 segundos')
-	},15000);
+	},5000);
 });
