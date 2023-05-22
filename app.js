@@ -59,7 +59,7 @@ app.post('/', function (req, res) {
 	//const jsonStringWithDoubleQuotes = jsonString.replace(/'/g, '"'); 
 	//const jsonObject = JSON.parse(jsonStringWithDoubleQuotes); 
 	//console.log(jsonStringWithDoubleQuotes);
-	//reqBodyBuff.push(jsonObject); 
+	reqBodyBuff.push(req.body); 
 	//console.log(req.body); 
 	// new Date().getTime() //MILLIS
 	res.sendStatus(200);
@@ -238,7 +238,7 @@ server.on('listening', ()=>{
 		//savedata? 
 		console.log('----------------------------------------------------');
 		console.log('reqBodyBuff antes getValuesBuff =', reqBodyBuff);
-		getValuesBuff(); //llena el valuesBuff con el primer mensaje no más.  
+		//getValuesBuff(); //llena el valuesBuff con el primer mensaje no más.  
 		getDevices(); 
 		console.log('reqBodyBuff después getValuesBuff =', reqBodyBuff);
 		console.log(devices);
