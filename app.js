@@ -59,7 +59,7 @@ app.post('/', function (req, res) {
 	//const jsonStringWithDoubleQuotes = jsonString.replace(/'/g, '"'); 
 	//const jsonObject = JSON.parse(jsonStringWithDoubleQuotes); 
 	//console.log(jsonStringWithDoubleQuotes);
-	reqBodyBuff.concat(req.body); 
+	reqBodyBuff = reqBodyBuff.concat(req.body); 
 	//console.log(req.body); 
 	// new Date().getTime() //MILLIS
 	res.sendStatus(200);
