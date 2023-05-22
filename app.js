@@ -77,20 +77,30 @@ function getValuesBuff(){
 		size = 30, //cualquier numero para probar el guardado en base de datos por mientras 
 		value = null,
 		id_devices_data_types = 1,
-		valuesBuff="";
+		valuesBuff="", 
+		id_device = null;
 
 		if(devices.length !== 0){
 			for (let a=0; a < devices.length; a ++){
 				if(devices[a].imei == imei){
 					console.log('dispositivo ya guardado')
+					id_device = devices[a].id_devices;
+					break;
 				} else {
 					saveDevice(imei);
+					for(let r=0; r<devices.length; r++){
+						if(devices[r].imei == imei){
+							console.log('dispositivo ya guardado')
+							id_device = devices[r].id_devices;
+							break;
+						}
+					}
 				}
 			}
 		} else {
 			saveDevice(imei);
 		}
-
+		console.log('id_device ahora es:', id_device); 
 		if (message !== undefined){
 
 			var time = message['timestamp'], 
