@@ -88,13 +88,6 @@ function getValuesBuff(){
 					break;
 				} else {
 					saveDevice(imei);
-					for(let r=0; r<devices.length; r++){
-						if(devices[r].imei == imei){
-							console.log('dispositivo ya guardado')
-							id_device = devices[r].id_devices;
-							break;
-						}
-					}
 				}
 			}
 		} else {
