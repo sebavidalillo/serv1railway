@@ -51,11 +51,16 @@ app.get('/datos', (req,res) => {
 });
 
 app.post('/', function (req, res) { 
-	//console.log(req.body);
+	console.log(req.body);
 	//const message = req.body; 
 	//saveData(getValuesBuff(req.body)); //esto debería hacerse cada cierto rato.
-	reqBodyBuff.push(req.body); 
-	console.log(req.body); 
+	//const requestBody = req.body; 
+	//const jsonString = JSON.stringify(requestBody); 
+	//const jsonStringWithDoubleQuotes = jsonString.replace(/'/g, '"'); 
+	//const jsonObject = JSON.parse(jsonStringWithDoubleQuotes); 
+	//console.log(jsonStringWithDoubleQuotes);
+	//reqBodyBuff.push(jsonObject); 
+	//console.log(req.body); 
 	// new Date().getTime() //MILLIS
 	res.sendStatus(200);
 });
@@ -96,11 +101,11 @@ function getValuesBuff(){
 
 
 		console.log('id_device ahora es:', id_device); 
+		console.log(message['peer']);
 		if (message !== undefined){
 
 			var time = message['timestamp'], 
-			dateEntry = moment(new Date(message['timestamp']*1000)).format(dateTimeFormat);
-			
+			dateEntry = moment(new Date(message['timestamp']*1000)).utcOffset(timeZone).format(dateTimeFormat);
 			var [ip, port] = message['peer'].split(':'),
 			gps = null,
 			gps_flag = 0; //indicar que si hay o no informacion del gps en el reporte
