@@ -238,12 +238,12 @@ server.on('listening', ()=>{
 		//savedata? 
 		console.log('----------------------------------------------------');
 		console.log('reqBodyBuff antes getValuesBuff =', reqBodyBuff);
-		//getValuesBuff(); //llena el valuesBuff con el primer mensaje no más.  
+		getValuesBuff(); //hace toda la weaita  
 		getDevices(); 
 		console.log('reqBodyBuff después getValuesBuff =', reqBodyBuff);
 		console.log(devices);
 		//saveData(valuesBuff);
 		//console.log(valuesBuff);
 		console.log('pasaron 10 segundos')
-	},5000);
+	},10000);
 });
