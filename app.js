@@ -51,7 +51,7 @@ app.get('/datos', (req,res) => {
 });
 
 app.post('/', function (req, res) { 
-	console.log(req.body);
+	console.log('EL REQ.BODY QUE LLEGA ES:', req.body);
 	//const message = req.body; 
 	//saveData(getValuesBuff(req.body)); //esto debería hacerse cada cierto rato.
 	//const requestBody = req.body; 
