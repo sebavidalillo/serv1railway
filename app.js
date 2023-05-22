@@ -86,13 +86,15 @@ function getValuesBuff(){
 					console.log('dispositivo ya guardado')
 					id_device = devices[a].id_devices;
 					break;
-				} else {
-					saveDevice(imei);
 				}
 			}
-		} else {
-			saveDevice(imei);
+		}	
+
+		if (id_device == null){
+			saveDevice(imei); 
 		}
+
+
 		console.log('id_device ahora es:', id_device); 
 		if (message !== undefined){
 
@@ -131,10 +133,10 @@ function getValuesBuff(){
 					if(valuesBuff !== ""){ valuesBuff += ","; }
 
 					if(gps_flag == 1){
-					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+ip+','+port+','+size+',"'+dateEntry+'")';
+					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT('  +gps+'),'+id_device+','+ip+','+port+','+size+',"'+dateEntry+'")';
 
 					} else if (gps_flag==0){
-					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+ip+','+port+','+size+',"'+dateEntry+'")';
+					valuesBuff += '('+id_devices_data_types+','+value+','+time+',POINT  (null,null),'+id_device+','+ip+','+port+','+size+',"'+dateEntry+'")';
 					};
 
 				};
@@ -145,7 +147,7 @@ function getValuesBuff(){
 	//se recorrió todo el reqBuffer y se guardó el valuesBuff, ahora toca guardarlo en base de datos. 
 	if(valuesBuff !== "" && valuesBuff !== undefined){
 		try {
-		database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, ip, port, size, dateEntry)    values '+valuesBuff+'',(error)=>{
+		database.query('insert into md_fleet_devices_data   (id_devices_data_types, value, time, gps, id_devices, ip, port, size, dateEntry)    values '+valuesBuff+'',(error)=>{
 			if(error){
 				throw error;
 			}
